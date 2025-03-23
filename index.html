@@ -28,34 +28,7 @@
     <button onclick="copyToClipboard()">Copiar al portapapeles</button>
 
     <script>
-        document.getElementById("fileInput").addEventListener("change", loadFile);
-
-        function extractData() {
-            let input = document.getElementById("inputData").value;
-            processText(input);
-        }
-
-        function processText(text) {
-            // Regex mejorado para capturar "usuario:contraseña" incluyendo emails
-            let regex = /(?:\s|^)([\w\.-]+@[\w\.-]+\.\w+:\S+|[\w\.-]+:\S+)(?=\s|$)/g;
-            let matches = [...text.matchAll(regex)].map(m => m[1]);  
-            let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
-            document.getElementById("outputData").value = result;
-        }
-
-        function copyToClipboard() {
-            let output = document.getElementById("outputData");
-            output.select();
-            document.execCommand("copy");
-            alert("¡Copiado al portapapeles!");
-        }
-
-        function clearFields() {
-            document.getElementById("inputData").value = "";
-            document.getElementById("outputData").value = "";
-        }
-
-        function loadFile(event) {
+        document.getElementById("fileInput").addEventListener("change", function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -88,8 +61,34 @@
             };
 
             reader.readAsText(file);
+        });
+
+        function extractData() {
+            let input = document.getElementById("inputData").value;
+            processText(input);
+        }
+
+        function processText(text) {
+            // Regex mejorado para capturar "usuario:contraseña" incluyendo emails completos
+            let regex = /(?:\s|^)([\w.-]+@[\w.-]+\.\w+:\S+|[\w\d_-]+:\S+)(?=\s|$)/g;
+            let matches = [...text.matchAll(regex)].map(m => m[1]);  
+            let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
+            document.getElementById("outputData").value = result;
+        }
+
+        function copyToClipboard() {
+            let output = document.getElementById("outputData");
+            output.select();
+            document.execCommand("copy");
+            alert("¡Copiado al portapapeles!");
+        }
+
+        function clearFields() {
+            document.getElementById("inputData").value = "";
+            document.getElementById("outputData").value = "";
         }
     </script>
 
 </body>
 </html>
+
