@@ -17,7 +17,7 @@
     <h2>Extractor de user:password</h2>
     <p>Pega los datos en el cuadro de abajo o carga un archivo de texto</p>
 
-    <input type="file" id="fileInput" accept=".txt" onchange="loadFile(event)"><br>
+    <input type="file" id="fileInput" accept=".txt"><br>
     <div id="progressBar"><div id="progress">0%</div></div>
 
     <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea><br>
@@ -28,10 +28,17 @@
     <button onclick="copyToClipboard()">Copiar al portapapeles</button>
 
     <script>
+        document.getElementById("fileInput").addEventListener("change", loadFile);
+
         function extractData() {
             let input = document.getElementById("inputData").value;
-            let regex = /(?:.*\s)?([\w\.-]+:\S+)/g;  // Captura solo el formato user:password
-            let matches = [...input.matchAll(regex)].map(m => m[1]);  
+            processText(input);
+        }
+
+        function processText(text) {
+            // Regex mejorado para capturar "usuario:contraseña" incluyendo emails
+            let regex = /(?:\s|^)([\w\.-]+@[\w\.-]+\.\w+:\S+|[\w\.-]+:\S+)(?=\s|$)/g;
+            let matches = [...text.matchAll(regex)].map(m => m[1]);  
             let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
             document.getElementById("outputData").value = result;
         }
@@ -69,7 +76,8 @@
             };
 
             reader.onload = function (e) {
-                document.getElementById("inputData").value = e.target.result;
+                let text = e.target.result;
+                processText(text); // Extrae automáticamente el contenido
                 progress.style.width = "100%";
                 progress.textContent = "100%";
                 setTimeout(() => progressBar.style.display = "none", 1000);
