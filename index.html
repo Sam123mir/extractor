@@ -5,9 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extractor de user:password</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        textarea { width: 80%; height: 150px; margin: 10px; font-size: 14px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 20px;
+        }
+        textarea { 
+            width: 80%; 
+            height: 150px; 
+            margin: 10px; 
+            font-size: 14px; 
+            padding: 10px;
+        }
+        .btn-container {
+            margin: 10px;
+        }
+        button { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+        }
+        .extract-btn { background-color: #28a745; color: white; }
+        .clear-btn { background-color: #dc3545; color: white; }
+        .copy-btn { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
@@ -16,9 +39,15 @@
     <p>Pega los datos en el cuadro de abajo y presiona "Extraer"</p>
 
     <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea><br>
-    <button onclick="extractData()">Extraer</button><br>
+    
+    <div class="btn-container">
+        <button class="extract-btn" onclick="extractData()">Extraer</button>
+        <button class="clear-btn" onclick="clearFields()">Limpiar</button>
+    </div>
+
     <textarea id="outputData" placeholder="Aquí aparecerán los resultados..." readonly></textarea><br>
-    <button onclick="copyToClipboard()">Copiar al portapapeles</button>
+    
+    <button class="copy-btn" onclick="copyToClipboard()">Copiar al portapapeles</button>
 
     <script>
         function extractData() {
@@ -34,6 +63,11 @@
             output.select();
             document.execCommand("copy");
             alert("¡Copiado al portapapeles!");
+        }
+
+        function clearFields() {
+            document.getElementById("inputData").value = "";
+            document.getElementById("outputData").value = "";
         }
     </script>
 
