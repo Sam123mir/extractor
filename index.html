@@ -25,9 +25,9 @@
     <script>
         function extractData() {
             let input = document.getElementById("inputData").value;
-            let regex = /([\w\.-]+@[\w\.-]+:\S+)/g;
-            let matches = input.match(regex);
-            let result = matches ? matches.join("\n") : "No se encontraron user:password";
+            let regex = /(?:.*\s)?([\w\.-]+:\S+)/g;  // Captura solo el formato user:password
+            let matches = [...input.matchAll(regex)].map(m => m[1]);  
+            let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
             document.getElementById("outputData").value = result;
         }
 
