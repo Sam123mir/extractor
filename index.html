@@ -7,13 +7,18 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
         textarea { width: 80%; height: 150px; margin: 10px; font-size: 14px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+        button, input { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+        #progressBar { width: 80%; height: 20px; background-color: #f3f3f3; margin: 10px auto; display: none; }
+        #progress { height: 100%; width: 0%; background-color: #4CAF50; text-align: center; line-height: 20px; color: white; }
     </style>
 </head>
 <body>
 
     <h2>Extractor de user:password</h2>
-    <p>Pega los datos en el cuadro de abajo y presiona "Extraer"</p>
+    <p>Pega los datos en el cuadro de abajo o carga un archivo de texto</p>
+
+    <input type="file" id="fileInput" accept=".txt" onchange="loadFile(event)"><br>
+    <div id="progressBar"><div id="progress">0%</div></div>
 
     <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea><br>
     <button onclick="extractData()">Extraer</button>
@@ -41,6 +46,40 @@
         function clearFields() {
             document.getElementById("inputData").value = "";
             document.getElementById("outputData").value = "";
+        }
+
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const progressBar = document.getElementById("progressBar");
+            const progress = document.getElementById("progress");
+
+            progressBar.style.display = "block";
+            progress.style.width = "0%";
+            progress.textContent = "0%";
+
+            reader.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    const percentLoaded = Math.round((e.loaded / e.total) * 100);
+                    progress.style.width = percentLoaded + "%";
+                    progress.textContent = percentLoaded + "%";
+                }
+            };
+
+            reader.onload = function (e) {
+                document.getElementById("inputData").value = e.target.result;
+                progress.style.width = "100%";
+                progress.textContent = "100%";
+                setTimeout(() => progressBar.style.display = "none", 1000);
+            };
+
+            reader.onerror = function () {
+                alert("Error al leer el archivo");
+            };
+
+            reader.readAsText(file);
         }
     </script>
 
