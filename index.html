@@ -3,19 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Extractor de user:password</title>
+  <title>Extractor user:pass</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-    textarea { width: 80%; height: 150px; margin: 10px; font-size: 14px; }
-    button, input { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
-    #progressBar { width: 80%; height: 20px; background-color: #f3f3f3; margin: 10px auto; display: none; }
-    #progress { height: 100%; width: 0%; background-color: #4CAF50; text-align: center; line-height: 20px; color: white; }
+    body {
+      background: #0f172a;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #38bdf8;
+    }
+
+    textarea {
+      width: 80%;
+      height: 150px;
+      margin: 10px;
+      font-size: 14px;
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 10px;
+      resize: none;
+    }
+
+    button, input[type="file"] {
+      background-color: #38bdf8;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #0f172a;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover, input[type="file"]:hover {
+      background-color: #0ea5e9;
+    }
+
+    #progressBar {
+      width: 80%;
+      height: 20px;
+      background-color: #334155;
+      margin: 15px auto;
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+    }
+
+    #progress {
+      height: 100%;
+      width: 0%;
+      background-color: #22c55e;
+      text-align: center;
+      line-height: 20px;
+      color: white;
+      transition: width 0.3s ease;
+    }
+
+    #downloadBtn {
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-  <h2>Extractor de user:password</h2>
-  <p>Pega los datos en el cuadro de abajo o carga un archivo de texto</p>
+  <h2>🎯 Extractor de <code>user:password</code></h2>
+  <p>Sube un archivo de texto o pega los datos:</p>
 
   <input type="file" id="fileInput" accept=".txt"><br>
   <div id="progressBar"><div id="progress">0%</div></div>
@@ -25,39 +85,36 @@
   <button onclick="clearFields()">Limpiar</button><br>
 
   <textarea id="outputData" placeholder="Aquí aparecerán los resultados..." readonly></textarea><br>
-  <button onclick="copyToClipboard()">Copiar al portapapeles</button>
-  <button id="downloadBtn" style="display:none;">Descargar TXT</button>
+  <button onclick="copyToClipboard()">📋 Copiar</button>
+  <button id="downloadBtn">⬇️ Descargar archivo</button>
 
   <script>
     let originalFileName = "resultado";
 
-    document.getElementById("fileInput").addEventListener("change", function(event) {
+    const fileInput = document.getElementById("fileInput");
+    const progressBar = document.getElementById("progressBar");
+    const progress = document.getElementById("progress");
+
+    fileInput.addEventListener("change", function (event) {
       const file = event.target.files[0];
       if (!file) return;
 
       originalFileName = file.name.replace(/\.txt$/, '') || "resultado";
-      const reader = new FileReader();
-      const progressBar = document.getElementById("progressBar");
-      const progress = document.getElementById("progress");
 
-      progressBar.style.display = "block";
-      progress.style.width = "0%";
-      progress.textContent = "0%";
+      const reader = new FileReader();
+      showProgress(0, true);
 
       reader.onprogress = function (e) {
         if (e.lengthComputable) {
-          const percentLoaded = Math.round((e.loaded / e.total) * 100);
-          progress.style.width = percentLoaded + "%";
-          progress.textContent = percentLoaded + "%";
+          const percent = Math.round((e.loaded / e.total) * 100);
+          showProgress(percent);
         }
       };
 
       reader.onload = function (e) {
-        const text = e.target.result;
-        processText(text);
-        progress.style.width = "100%";
-        progress.textContent = "100%";
-        setTimeout(() => progressBar.style.display = "none", 1000);
+        document.getElementById("inputData").value = e.target.result;
+        showProgress(100);
+        setTimeout(() => progressBar.style.display = "none", 800);
       };
 
       reader.onerror = function () {
@@ -68,18 +125,33 @@
     });
 
     function extractData() {
-      const input = document.getElementById("inputData").value;
-      processText(input);
+      const text = document.getElementById("inputData").value;
+      const regex = /(?:^|\s)([\w.-]+@[\w.-]+\.\w+:[^\s@:]+|[\w\d_-]+:[^\s@:]+)(?=\s|$)/g;
+      let matches = [...text.matchAll(regex)]
+        .map(m => m[1])
+        .filter(str => !str.includes("http") && !str.includes("www"));
+
+      const result = matches.length ? matches.join("\n") : "No se encontraron user:password";
+      document.getElementById("outputData").value = result;
+
+      generateDownload(result);
     }
 
-    function processText(text) {
-      // Regex ajustado para evitar links y extraer solo patrones user:password
-      let regex = /(?:^|\s)([\w.-]+@[\w.-]+\.\w+:[^\s@:]+|[\w\d_-]+:[^\s@:]+)(?=\s|$)/g;
-      let matches = [...text.matchAll(regex)].map(m => m[1]).filter(str => !str.includes("http") && !str.includes("www"));
-      let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
+    function generateDownload(content) {
+      showProgress(0, true);
+      setTimeout(() => showProgress(100), 500);
+      setTimeout(() => {
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
 
-      document.getElementById("outputData").value = result;
-      showDownloadButton(result);
+        const downloadBtn = document.getElementById("downloadBtn");
+        downloadBtn.href = url;
+        downloadBtn.download = originalFileName + "_extraido.txt";
+        downloadBtn.style.display = "inline-block";
+        downloadBtn.onclick = () => setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        progressBar.style.display = "none";
+      }, 1000);
     }
 
     function copyToClipboard() {
@@ -95,18 +167,13 @@
       document.getElementById("downloadBtn").style.display = "none";
     }
 
-    function showDownloadButton(content) {
-      const downloadBtn = document.getElementById("downloadBtn");
-      const blob = new Blob([content], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-
-      downloadBtn.href = url;
-      downloadBtn.download = originalFileName + "_extraido.txt";
-      downloadBtn.style.display = "inline-block";
-      downloadBtn.textContent = "Descargar archivo";
-      downloadBtn.onclick = () => setTimeout(() => URL.revokeObjectURL(url), 100);
+    function showProgress(percent, show = false) {
+      if (show) progressBar.style.display = "block";
+      progress.style.width = percent + "%";
+      progress.textContent = percent + "%";
     }
   </script>
 
 </body>
 </html>
+
