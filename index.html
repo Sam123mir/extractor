@@ -1,94 +1,112 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extractor de user:password</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        textarea { width: 80%; height: 150px; margin: 10px; font-size: 14px; }
-        button, input { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
-        #progressBar { width: 80%; height: 20px; background-color: #f3f3f3; margin: 10px auto; display: none; }
-        #progress { height: 100%; width: 0%; background-color: #4CAF50; text-align: center; line-height: 20px; color: white; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Extractor de user:password</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    textarea { width: 80%; height: 150px; margin: 10px; font-size: 14px; }
+    button, input { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+    #progressBar { width: 80%; height: 20px; background-color: #f3f3f3; margin: 10px auto; display: none; }
+    #progress { height: 100%; width: 0%; background-color: #4CAF50; text-align: center; line-height: 20px; color: white; }
+  </style>
 </head>
 <body>
 
-    <h2>Extractor de user:password</h2>
-    <p>Pega los datos en el cuadro de abajo o carga un archivo de texto</p>
+  <h2>Extractor de user:password</h2>
+  <p>Pega los datos en el cuadro de abajo o carga un archivo de texto</p>
 
-    <input type="file" id="fileInput" accept=".txt"><br>
-    <div id="progressBar"><div id="progress">0%</div></div>
+  <input type="file" id="fileInput" accept=".txt"><br>
+  <div id="progressBar"><div id="progress">0%</div></div>
 
-    <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea><br>
-    <button onclick="extractData()">Extraer</button>
-    <button onclick="clearFields()">Limpiar</button><br>
-    
-    <textarea id="outputData" placeholder="Aquí aparecerán los resultados..." readonly></textarea><br>
-    <button onclick="copyToClipboard()">Copiar al portapapeles</button>
+  <textarea id="inputData" placeholder="Pega aquí los datos..."></textarea><br>
+  <button onclick="extractData()">Extraer</button>
+  <button onclick="clearFields()">Limpiar</button><br>
 
-    <script>
-        document.getElementById("fileInput").addEventListener("change", function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+  <textarea id="outputData" placeholder="Aquí aparecerán los resultados..." readonly></textarea><br>
+  <button onclick="copyToClipboard()">Copiar al portapapeles</button>
+  <button id="downloadBtn" style="display:none;">Descargar TXT</button>
 
-            const reader = new FileReader();
-            const progressBar = document.getElementById("progressBar");
-            const progress = document.getElementById("progress");
+  <script>
+    let originalFileName = "resultado";
 
-            progressBar.style.display = "block";
-            progress.style.width = "0%";
-            progress.textContent = "0%";
+    document.getElementById("fileInput").addEventListener("change", function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-            reader.onprogress = function (e) {
-                if (e.lengthComputable) {
-                    const percentLoaded = Math.round((e.loaded / e.total) * 100);
-                    progress.style.width = percentLoaded + "%";
-                    progress.textContent = percentLoaded + "%";
-                }
-            };
+      originalFileName = file.name.replace(/\.txt$/, '') || "resultado";
+      const reader = new FileReader();
+      const progressBar = document.getElementById("progressBar");
+      const progress = document.getElementById("progress");
 
-            reader.onload = function (e) {
-                let text = e.target.result;
-                processText(text); // Extrae automáticamente el contenido
-                progress.style.width = "100%";
-                progress.textContent = "100%";
-                setTimeout(() => progressBar.style.display = "none", 1000);
-            };
+      progressBar.style.display = "block";
+      progress.style.width = "0%";
+      progress.textContent = "0%";
 
-            reader.onerror = function () {
-                alert("Error al leer el archivo");
-            };
-
-            reader.readAsText(file);
-        });
-
-        function extractData() {
-            let input = document.getElementById("inputData").value;
-            processText(input);
+      reader.onprogress = function (e) {
+        if (e.lengthComputable) {
+          const percentLoaded = Math.round((e.loaded / e.total) * 100);
+          progress.style.width = percentLoaded + "%";
+          progress.textContent = percentLoaded + "%";
         }
+      };
 
-        function processText(text) {
-            // Regex mejorado para capturar "usuario:contraseña" incluyendo emails completos
-            let regex = /(?:\s|^)([\w.-]+@[\w.-]+\.\w+:\S+|[\w\d_-]+:\S+)(?=\s|$)/g;
-            let matches = [...text.matchAll(regex)].map(m => m[1]);  
-            let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
-            document.getElementById("outputData").value = result;
-        }
+      reader.onload = function (e) {
+        const text = e.target.result;
+        processText(text);
+        progress.style.width = "100%";
+        progress.textContent = "100%";
+        setTimeout(() => progressBar.style.display = "none", 1000);
+      };
 
-        function copyToClipboard() {
-            let output = document.getElementById("outputData");
-            output.select();
-            document.execCommand("copy");
-            alert("¡Copiado al portapapeles!");
-        }
+      reader.onerror = function () {
+        alert("Error al leer el archivo");
+      };
 
-        function clearFields() {
-            document.getElementById("inputData").value = "";
-            document.getElementById("outputData").value = "";
-        }
-    </script>
+      reader.readAsText(file);
+    });
+
+    function extractData() {
+      const input = document.getElementById("inputData").value;
+      processText(input);
+    }
+
+    function processText(text) {
+      // Regex ajustado para evitar links y extraer solo patrones user:password
+      let regex = /(?:^|\s)([\w.-]+@[\w.-]+\.\w+:[^\s@:]+|[\w\d_-]+:[^\s@:]+)(?=\s|$)/g;
+      let matches = [...text.matchAll(regex)].map(m => m[1]).filter(str => !str.includes("http") && !str.includes("www"));
+      let result = matches.length > 0 ? matches.join("\n") : "No se encontraron user:password";
+
+      document.getElementById("outputData").value = result;
+      showDownloadButton(result);
+    }
+
+    function copyToClipboard() {
+      const output = document.getElementById("outputData");
+      output.select();
+      document.execCommand("copy");
+      alert("¡Copiado al portapapeles!");
+    }
+
+    function clearFields() {
+      document.getElementById("inputData").value = "";
+      document.getElementById("outputData").value = "";
+      document.getElementById("downloadBtn").style.display = "none";
+    }
+
+    function showDownloadButton(content) {
+      const downloadBtn = document.getElementById("downloadBtn");
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+
+      downloadBtn.href = url;
+      downloadBtn.download = originalFileName + "_extraido.txt";
+      downloadBtn.style.display = "inline-block";
+      downloadBtn.textContent = "Descargar archivo";
+      downloadBtn.onclick = () => setTimeout(() => URL.revokeObjectURL(url), 100);
+    }
+  </script>
 
 </body>
 </html>
-
